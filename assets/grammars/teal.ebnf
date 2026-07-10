@@ -1,0 +1,19 @@
+EOF ::= ...;
+
+<File> ::= <Module> EOF;
+<Module> ::= "module" IDENTIFIER <ModuleBody>;
+<ModuleBody> ::= "{" <ModuleItem>* "}";
+<ModuleItem> ::= <Param> | <Port> | <Wire> | <Reg> | <Assign>;
+
+<Param> ::= ("param" | "local") IDENTIFIER ("=" <Constant>);
+<Port> ::= ("input" | "output") <BitVector> ";";
+<Wire> ::= "wire" <BitVector> <Array> "=" <Expression>;
+<Reg> ::= "reg" <BitVector> <Array> "on" <Event> "=" <Expression> ";";
+<Assign> ::= "assign" <BitVector> "=" <Expression>;
+
+<PrimaryExpression> ::= <PrimaryExpression> "'" <Base> HEXNUM | IDENTIFIER | "(" <Expression> ")";
+<PostfixExpression> ::= <PrimaryExpression> | <PostfixExpression> 
+
+<Base> ::= "b" | "o" | "d" | "h";
+
+<BitVector> ::= "["  "]"
