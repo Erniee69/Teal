@@ -1,19 +1,59 @@
-EOF ::= ...;
+// Tokens
+EOF ::= $;
+IDENTIFIER ::= [_a-zA-Z][_a-zA-Z0-9]*;
+NUMBER ::= [0-9]+;
+BASENUMBER ::= "'" ("b" | "o" | "d" | "h") [0-9a-fA-F]+;
+ARRAYDIMID ::= "%" [0-9]+;
+SKIP ::= [ \t\n\r] | "//" [^\n] "\n";
 
-<File> ::= <Module> EOF;
-<Module> ::= "module" IDENTIFIER <ModuleBody>;
+// Grammar
+// --- File
+<File>       ::= <Module> EOF;
+<Module>     ::= "module" IDENTIFIER <ModuleBody>;
 <ModuleBody> ::= "{" <ModuleItem>* "}";
-<ModuleItem> ::= <Param> | <Port> | <Wire> | <Reg> | <Assign>;
+<ModuleItem> ::= <Param> | <Port> | <Wire> | <Reg> | <Assign> | <Instantiation>;
 
-<Param> ::= ("param" | "local") IDENTIFIER ("=" <Constant>);
-<Port> ::= ("input" | "output") <BitVector> ";";
-<Wire> ::= "wire" <BitVector> <Array> "=" <Expression>;
-<Reg> ::= "reg" <BitVector> <Array> "on" <Event> "=" <Expression> ";";
-<Assign> ::= "assign" <BitVector> "=" <Expression>;
+// --- Module Items
+<Param>  ::= ("param" | "local") IDENTIFIER "=" <Expression> ";";
+<Port>   ::= ("input" | "output") <Bundle> ";";
+<Wire>   ::= "wire" <Bundle> "=" <Expression> ";";
+<Reg>    ::= "reg" <Bundle> "on" <Event> "=" <Expression> ";";
+<Assign> ::= "assign" <Bundle> "=" <Expression> ";";
+<Instantiation> ::= IDENTIFIER IDENTIFIER "(" <PortConnectionList> ")" ";";
 
-<PrimaryExpression> ::= <PrimaryExpression> "'" <Base> HEXNUM | IDENTIFIER | "(" <Expression> ")";
-<PostfixExpression> ::= <PrimaryExpression> | <PostfixExpression> 
+// --- Expression
+<PrimaryExpression>    ::= NUMBER | NUMBER "'" BASENUMBER | IDENTIFIER | ARRAYDIMID | <Match> | "(" <Expression> ")";
+<PostfixExpression>    ::= <PrimaryExpression> | <PostfixExpression> <PostfixOperator>;
+<PrefixExpression>     ::= <PostfixExpression> | <PrefixExpression> <PrefixOperator>;
+<BitwiseExpression>    ::= <PrefixExpression>  | <BitwiseExpression> <BitwiseOperator> <PrefixExpression>;
+<MultExpression>       ::= <BitwiseExpression> | <MultExpression> <MultOperator> <BitwiseExpression>;
+<AddExpression>        ::= <MultExpression>    | <AddExpression> <AddOperator> <MultExpression>;
+<ShiftExpression>      ::= <AddExpression>     | <ShiftExpression> <ShiftOperator> <AddExpression>;
+<ConcatExpression>     ::= <ShiftExpression>   | <ConcatExpression> <ConcatOperator> <ShiftExpression>;
+<RelationalExpression> ::= <ConcatExpression>  | <RelationalExpression> <RelationalOperator> <ConcatExpression>;
+<TernaryExpression>    ::= <TernaryExpression> "?" <TernaryExpression> ":" <TernaryExpression>;
+<Expression>           ::= <TernaryExpression>;
 
-<Base> ::= "b" | "o" | "d" | "h";
+// --- Operators
+<Match>              ::= "match" "(" <Expression> ")" "{" <MatchArm> ("," <MatchArm>)* ","? "}";
+<MatchArm>           ::= (<Expression> | "default") "=>" (<Expression> | "never");
+<PostfixOperator>    ::= <Range> | <Array>;
+<PrefixOperator>     ::= "~" | ":&" | ":|" | ":^" | ":~&" | ":~|" | ":~^";
+<BitwiseOperator>    ::= "&" | "|" | "^";
+<MultOperator>       ::= "*" | "/" | "%";
+<AddOperator>        ::= "+" | "-";
+<ShiftOperator>      ::= "<<" | ">>" | "<<<" | ">>>";
+<ConcatOperator>     ::= "$" | "$$";
+<RelationalOperator> ::= "<" | ">" | "<=" | >=" | "==" | "!=";
 
-<BitVector> ::= "["  "]"
+// --- Bundle
+<Bundle> ::= <Range>? IDENTIFIER <Array>*;
+<Range>  ::= "[" <Expression> ":" <Expression> "]";
+<Array>  ::= "[" <Expression> "]";
+
+// --- Event
+<Event> ::= "(" ("posedge" | "negedge") IDENTIFIER ")";
+
+// --- Port Connection
+<PortConnectionList> ::= <PortConnection> ("," <PortConnection>)* ","?;
+<PortConnection> ::= IDENTIFIER ("<-" | "->") IDENTIFIER;
