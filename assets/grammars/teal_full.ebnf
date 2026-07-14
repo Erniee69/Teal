@@ -60,8 +60,8 @@ SYM_LTE       ::= "<=";
 SYM_GTE       ::= ">=";
 SYM_EQ        ::= "==";
 SYM_NEQ       ::= "!=";
-SYM_ARR_IN    ::= "<-";
-SYM_ARR_OUT   ::= "->";
+SYM_ARROW_IN  ::= "<-";
+SYM_ARROW_OUT ::= "->";
 SYM_DOT       ::= ".";
 
 
