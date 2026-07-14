@@ -1,0 +1,118 @@
+// Tokens
+EOF ::= $;
+IDENTIFIER ::= [_a-zA-Z][_a-zA-Z0-9]*;
+NUMBER ::= [0-9]+;
+BASENUMBER ::= "'" ("b" | "o" | "d" | "h") [0-9a-fA-F]+;
+ARRAYDIMID ::= "%" [0-9]+;
+SKIP ::= [ \t\n\r] | "//" [^\n] "\n";
+
+KW_MODULE  ::= "module";
+KW_PARAM   ::= "param";
+KW_LOCAL   ::= "local";
+KW_INPUT   ::= "input";
+KW_OUTPUT  ::= "output";
+KW_WIRE    ::= "wire";
+KW_REG     ::= "reg";
+KW_ASSIGN  ::= "assign";
+KW_ON      ::= "on";
+KW_MATCH   ::= "match";
+KW_DEFAULT ::= "default";
+KW_NEVER   ::= "never";
+KW_POSEDGE ::= "posedge";
+KW_NEGEDGE ::= "negedge";
+
+SYM_LCURLYBRACKET  ::= "{";
+SYM_RCURLYBRACKET  ::= "}";
+SYM_LROUNDBRACKET  ::= "(";
+SYM_RROUNDBRACKET  ::= ")";
+SYM_LSQUAREBRACKET ::= "[";
+SYM_RSQUAREBRACKET ::= "]";
+SYM_ASSIGN    ::= "=";
+SYM_SEMICOLON ::= ";";
+SYM_ASK       ::= "?";
+SYM_COLON     ::= ":";
+SYM_COMMA     ::= ",";
+SYM_DARROW    ::= "=>";
+SYM_BITNOT    ::= "~";
+SYM_BITAND    ::= "&";
+SYM_BITOR     ::= "|";
+SYM_BITXOR    ::= "^";
+SYM_REDAND    ::= ":&";
+SYM_REDOR     ::= ":|";
+SYM_REDXOR    ::= ":^";
+SYM_REDNAND   ::= ":~&";
+SYM_REDNOR    ::= ":~|";
+SYM_REDXNOR   ::= ":~^";
+SYM_PLUS      ::= "+";
+SYM_MINUS     ::= "-";
+SYM_STAR      ::= "*";
+SYM_SLASH     ::= "/";
+SYM_PERC      ::= "%";
+SYM_SLL       ::= "<<";
+SYM_SLR       ::= ">>";
+SYM_SAL       ::= "<<<";
+SYM_SAR       ::= ">>>";
+SYM_CONCAT    ::= "$";
+SYM_REPEAT    ::= "$$";
+SYM_LT        ::= "<";
+SYM_GT        ::= ">";
+SYM_LTE       ::= "<=";
+SYM_GTE       ::= ">=";
+SYM_EQ        ::= "==";
+SYM_NEQ       ::= "!=";
+SYM_ARR_IN    ::= "<-";
+SYM_ARR_OUT   ::= "->";
+SYM_DOT       ::= ".";
+
+
+// Grammar
+// --- File
+<File>       ::= <Module> EOF;
+<Module>     ::= "module" IDENTIFIER <ModuleBody>;
+<ModuleBody> ::= "{" <ModuleItem>* "}";
+<ModuleItem> ::= <Param> | <Port> | <Wire> | <Reg> | <Assign> | <Instantiation>;
+
+// --- Module Items
+<Param>  ::= ("param" | "local") IDENTIFIER "=" <Expression> ";";
+<Port>   ::= ("input" | "output") <Bundle> ";";
+<Wire>   ::= "wire" <Bundle> "=" <Expression> ";";
+<Reg>    ::= "reg" <Bundle> "on" <Event> "=" <Expression> ";";
+<Assign> ::= "assign" <Bundle> "=" <Expression> ";";
+<Instantiation> ::= IDENTIFIER IDENTIFIER "(" <PortConnectionList> ")" ";";
+
+// --- Expression
+<PrimaryExpression>    ::= NUMBER | NUMBER BASENUMBER | IDENTIFIER | ARRAYDIMID | <Match> | "(" <Expression> ")";
+<PostfixExpression>    ::= <PrimaryExpression> | <PostfixExpression> <PostfixOperator>;
+<PrefixExpression>     ::= <PostfixExpression> | <PrefixExpression> <PrefixOperator>;
+<BitwiseExpression>    ::= <PrefixExpression>  | <BitwiseExpression> <BitwiseOperator> <PrefixExpression>;
+<MultExpression>       ::= <BitwiseExpression> | <MultExpression> <MultOperator> <BitwiseExpression>;
+<AddExpression>        ::= <MultExpression>    | <AddExpression> <AddOperator> <MultExpression>;
+<ShiftExpression>      ::= <AddExpression>     | <ShiftExpression> <ShiftOperator> <AddExpression>;
+<ConcatExpression>     ::= <ShiftExpression>   | <ConcatExpression> <ConcatOperator> <ShiftExpression>;
+<RelationalExpression> ::= <ConcatExpression>  | <RelationalExpression> <RelationalOperator> <ConcatExpression>;
+<TernaryExpression>    ::= <TernaryExpression> "?" <TernaryExpression> ":" <TernaryExpression>;
+<Expression>           ::= <TernaryExpression>;
+
+// --- Operators
+<Match>              ::= "match" "(" <Expression> ")" "{" <MatchArm> ("," <MatchArm>)* ","? "}";
+<MatchArm>           ::= (<Expression> | "default") "=>" (<Expression> | "never");
+<PostfixOperator>    ::= <Range> | <Array>;
+<PrefixOperator>     ::= "~" | ":&" | ":|" | ":^" | ":~&" | ":~|" | ":~^";
+<BitwiseOperator>    ::= "&" | "|" | "^";
+<MultOperator>       ::= "*" | "/" | "%";
+<AddOperator>        ::= "+" | "-";
+<ShiftOperator>      ::= "<<" | ">>" | "<<<" | ">>>";
+<ConcatOperator>     ::= "$" | "$$";
+<RelationalOperator> ::= "<" | ">" | "<=" | >=" | "==" | "!=";
+
+// --- Bundle
+<Bundle> ::= <Range>? IDENTIFIER <Array>*;
+<Range>  ::= "[" <Expression> ":" <Expression> "]";
+<Array>  ::= "[" <Expression> "]";
+
+// --- Event
+<Event> ::= "(" ("posedge" | "negedge") IDENTIFIER ")";
+
+// --- Port Connection
+<PortConnectionList> ::= <PortConnection> ("," <PortConnection>)* ","?;
+<PortConnection> ::= "." IDENTIFIER ("<-" | "->") IDENTIFIER;
