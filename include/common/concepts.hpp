@@ -5,7 +5,7 @@ concept SameType = __is_same(T, U);
 
 template <typename T>
 concept Copy = requires (T t) {
-    { t.copy((T*) nullptr) } -> SameType<bool>;
+    { t.copy() } -> SameType<T>;
 };
 
 template <typename T>

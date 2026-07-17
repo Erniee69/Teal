@@ -1,7 +1,7 @@
 #pragma once
 #include "defs.hpp"
-#include <stdlib.h>
 #include "concepts.hpp"
+#include "util.hpp"
 
 template <typename T>
 struct Stack {
@@ -14,11 +14,10 @@ struct Stack {
 
     bool is_empty() const;
 
-    bool push(T p_elem);
+    void push(T p_elem);
     bool pop(T* r_elem);
 
-    bool copy(Stack<T>* r_dest) const;
-
+    Stack<T> copy() const;
     void drop() const;
 };
 
@@ -33,10 +32,10 @@ Stack<T> Stack<T>::empty() {
 
 template <typename T>
 Stack<T> Stack<T>::with_capacity(usize p_cap) {
-    T* data = (T*) malloc(p_cap * sizeof(T));
+    T* data = gmalloc<T>(p_cap);
     return (Stack<T>) {
         .m_len = 0,
-        .m_cap = data ? p_cap : 0,
+        .m_cap = p_cap,
         .m_data = data,
     };
 }
@@ -47,16 +46,12 @@ bool Stack<T>::is_empty() const {
 }
 
 template <typename T>
-bool Stack<T>::push(T p_elem) {
+void Stack<T>::push(T p_elem) {
     if (m_len == m_cap) {
-        usize new_cap = m_cap ? 2 * m_cap : 2;
-        T* new_data = (T*) realloc((void*) m_data, new_cap * sizeof(T));
-        if (!new_data) return false;
-        m_data = new_data;
-        m_cap = new_cap;
+        m_cap = m_cap ? 2 * m_cap : 2;
+        m_data = grealloc<T>(m_data, m_cap);
     }
     m_data[m_len++] = p_elem;
-    return true;
 }
 
 template <typename T>
@@ -67,36 +62,24 @@ bool Stack<T>::pop(T* r_elem) {
 }
 
 template <typename T>
-bool Stack<T>::copy(Stack<T>* r_dest) const {
+Stack<T> Stack<T>::copy() const {
     if (m_len == 0) {
-        *r_dest = Stack<T>::empty();
-        return true;
+        return Stack<T>::empty();
     }
-    T* new_data = (T*) malloc(m_len * sizeof(T));
-    if (!new_data) return false;
-    if constexpr (Copy<T>) {
-        for (usize i = 0; i < m_len; i++) {
-            bool success = m_data[i].copy(&new_data[i]);
-            if (!success) {
-                if constexpr (Drop<T>)
-                for (usize j = 0; j < i; j++) {
-                    new_data[j].drop();
-                };
-                free(new_data);
-                return false;
-            }
+    T* new_data = gmalloc<T>(m_len);
+    for (usize i = 0; i < m_len; i++) {
+        if constexpr (Copy<T>) {
+            new_data[i] = m_data[i].copy();
         }
-    } else {
-        for (usize i = 0; i < m_len; i++) {
+        else {
             new_data[i] = m_data[i];
         }
     }
-    *r_dest = (Stack<T>) {
+    return (Stack<T>) {
         .m_len = m_len,
         .m_cap = m_len,
         .m_data = new_data,
     };
-    return true;
 }
 
 template <typename T>
