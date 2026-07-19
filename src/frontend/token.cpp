@@ -1,0 +1,70 @@
+#include "frontend/token.hpp"
+#include <stdio.h>
+
+static const char* map[] = {
+    [(usize) TokenKind::INVALID           ] = "[Invalid]",
+    [(usize) TokenKind::IDENTIFIER        ] = "Identifier",
+    [(usize) TokenKind::NUMBER            ] = "Number",
+    [(usize) TokenKind::BASENUMBER        ] = "Basenumber",
+    [(usize) TokenKind::ARRAYDIMID        ] = "ArrayDimensionID",
+    [(usize) TokenKind::SKIP              ] = "Skip",
+    [(usize) TokenKind::SYM_EOF           ] = "EOF",
+    [(usize) TokenKind::KW_MODULE         ] = "Module",
+    [(usize) TokenKind::KW_PARAM          ] = "Parameter",
+    [(usize) TokenKind::KW_LOCAL          ] = "Local",
+    [(usize) TokenKind::KW_INPUT          ] = "Input",
+    [(usize) TokenKind::KW_OUTPUT         ] = "Output",
+    [(usize) TokenKind::KW_WIRE           ] = "Wire",
+    [(usize) TokenKind::KW_REG            ] = "Register",
+    [(usize) TokenKind::KW_ASSIGN         ] = "Assign",
+    [(usize) TokenKind::KW_ON             ] = "On",
+    [(usize) TokenKind::KW_MATCH          ] = "Match",
+    [(usize) TokenKind::KW_DEFAULT        ] = "Default",
+    [(usize) TokenKind::KW_NEVER          ] = "Never",
+    [(usize) TokenKind::KW_POSEDGE        ] = "Posedge",
+    [(usize) TokenKind::KW_NEGEDGE        ] = "Negedge",
+    [(usize) TokenKind::SYM_LCURLYBRACKET ] = "Sym{",
+    [(usize) TokenKind::SYM_RCURLYBRACKET ] = "Sym}",
+    [(usize) TokenKind::SYM_LROUNDBRACKET ] = "Sym(",
+    [(usize) TokenKind::SYM_RROUNDBRACKET ] = "Sym)",
+    [(usize) TokenKind::SYM_LSQUAREBRACKET] = "Sym[",
+    [(usize) TokenKind::SYM_RSQUAREBRACKET] = "Sym]",
+    [(usize) TokenKind::SYM_ASSIGN        ] = "Sym=",
+    [(usize) TokenKind::SYM_SEMICOLON     ] = "Sym;",
+    [(usize) TokenKind::SYM_ASK           ] = "Sym?",
+    [(usize) TokenKind::SYM_COLON         ] = "Sym:",
+    [(usize) TokenKind::SYM_COMMA         ] = "Sym,",
+    [(usize) TokenKind::SYM_DARROW        ] = "Sym=>",
+    [(usize) TokenKind::SYM_BITNOT        ] = "Sym~",
+    [(usize) TokenKind::SYM_BITAND        ] = "Sym&",
+    [(usize) TokenKind::SYM_BITOR         ] = "Sym|",
+    [(usize) TokenKind::SYM_BITXOR        ] = "Sym^",
+    [(usize) TokenKind::SYM_PLUS          ] = "Sym+",
+    [(usize) TokenKind::SYM_MINUS         ] = "Sym-",
+    [(usize) TokenKind::SYM_STAR          ] = "Sym*",
+    [(usize) TokenKind::SYM_SLASH         ] = "Sym/",
+    [(usize) TokenKind::SYM_PERC          ] = "Sym%",
+    [(usize) TokenKind::SYM_SLL           ] = "Sym<<",
+    [(usize) TokenKind::SYM_SLR           ] = "Sym>>",
+    [(usize) TokenKind::SYM_SAL           ] = "Sym<<<",
+    [(usize) TokenKind::SYM_SAR           ] = "Sym>>>",
+    [(usize) TokenKind::SYM_CONCAT        ] = "Sym$",
+    [(usize) TokenKind::SYM_REPEAT        ] = "Sym$$",
+    [(usize) TokenKind::SYM_LT            ] = "Sym<",
+    [(usize) TokenKind::SYM_GT            ] = "Sym>",
+    [(usize) TokenKind::SYM_LTE           ] = "Sym<=",
+    [(usize) TokenKind::SYM_GTE           ] = "Sym>=",
+    [(usize) TokenKind::SYM_EQ            ] = "Sym==",
+    [(usize) TokenKind::SYM_NEQ           ] = "Sym!=",
+    [(usize) TokenKind::SYM_ARROW_IN      ] = "Sym<-",
+    [(usize) TokenKind::SYM_ARROW_OUT     ] = "Sym->",
+    [(usize) TokenKind::SYM_DOT           ] = "Sym.",
+};
+
+char* Token::to_string() const {
+    const char* lexeme = m_lexeme.get();
+    const char* kind = map[(usize) m_kind];
+    char* result;
+    asprintf(&result, "%s(\"%s\")", kind, lexeme);
+    return result;
+}

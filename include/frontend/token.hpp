@@ -42,12 +42,6 @@ enum class TokenKind {
     SYM_BITAND,
     SYM_BITOR,
     SYM_BITXOR,
-    SYM_REDAND,
-    SYM_REDOR,
-    SYM_REDXOR,
-    SYM_REDNAND,
-    SYM_REDNOR,
-    SYM_REDXNOR,
     SYM_PLUS,
     SYM_MINUS,
     SYM_STAR,
@@ -74,4 +68,6 @@ struct Token {
     TokenKind m_kind;
     IString m_lexeme;
     SourceLocation m_location;
+
+    char* to_string() const;
 };

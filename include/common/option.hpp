@@ -11,7 +11,7 @@ struct Option {
 
     T unwrap();
 
-    bool copy(Option<T>* p_dest) const;
+    Option<T> copy() const;
     void drop() const;
 };
 
@@ -37,18 +37,18 @@ T Option<T>::unwrap() {
 }
 
 template <typename T>
-bool Option<T>::copy(Option<T>* p_dest) const {
+Option<T> Option<T>::copy() const {
+    Option<T> result;
     if (m_ok) {
         if constexpr (Copy<T>) {
-            bool succ = m_data.copy(p_dest->m_data);
-            if (!succ) return false;
+            result.m_data = m_data.copy();
         }
         else {
-            p_dest->m_data = m_data;
+            result.m_data = m_data;
         }
     }
-    p_dest->m_ok = m_ok;
-    return true;
+    result.m_ok = m_ok;
+    return result;
 }
 
 template <typename T>

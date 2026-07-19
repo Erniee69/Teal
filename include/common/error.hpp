@@ -20,7 +20,6 @@ struct Error {
 
 struct ErrorCtx {
     bool m_fatal;
-    bool m_oom;
     Vec<Error> m_errors;
 
     static ErrorCtx empty();

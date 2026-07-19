@@ -4,6 +4,7 @@ IDENTIFIER ::= [_a-zA-Z][_a-zA-Z0-9]*;
 NUMBER ::= [0-9]+;
 BASENUMBER ::= "'" ("b" | "o" | "d" | "h") [0-9a-fA-F]+;
 ARRAYDIMID ::= "%" [0-9]+;
+INTRINSIC ::= "#" [_a-zA-Z][_a-zA-Z0-9]*;
 SKIP ::= [ \t\n\r] | "//" [^\n] "\n";
 
 KW_MODULE  ::= "module";
@@ -37,12 +38,6 @@ SYM_BITNOT    ::= "~";
 SYM_BITAND    ::= "&";
 SYM_BITOR     ::= "|";
 SYM_BITXOR    ::= "^";
-SYM_REDAND    ::= ":&";
-SYM_REDOR     ::= ":|";
-SYM_REDXOR    ::= ":^";
-SYM_REDNAND   ::= ":~&";
-SYM_REDNOR    ::= ":~|";
-SYM_REDXNOR   ::= ":~^";
 SYM_PLUS      ::= "+";
 SYM_MINUS     ::= "-";
 SYM_STAR      ::= "*";
@@ -81,7 +76,7 @@ SYM_DOT       ::= ".";
 <Instantiation> ::= IDENTIFIER IDENTIFIER "(" <PortConnectionList> ")" ";";
 
 // --- Expression
-<PrimaryExpression>    ::= NUMBER | NUMBER BASENUMBER | IDENTIFIER | ARRAYDIMID | <Match> | "(" <Expression> ")";
+<PrimaryExpression>    ::= NUMBER | NUMBER BASENUMBER | IDENTIFIER | ARRAYDIMID | INTRINSIC "(" <Expression> ("," <Expression>)* ","? ")" | <Match> | "(" <Expression> ")";
 <PostfixExpression>    ::= <PrimaryExpression> | <PostfixExpression> <PostfixOperator>;
 <PrefixExpression>     ::= <PostfixExpression> | <PrefixExpression> <PrefixOperator>;
 <BitwiseExpression>    ::= <PrefixExpression>  | <BitwiseExpression> <BitwiseOperator> <PrefixExpression>;

@@ -1,0 +1,51 @@
+module scoreboard {
+    param TAG_LEN = 6;
+    param REG_COUNT = 32;
+    local IDX_LEN = 5;
+
+    // Ports
+    input clk;
+    input reset;
+    
+    input                  i_aqu;
+    input  [TAG_LEN-1:0] i_aqu_by;
+    input  [IDX_LEN-1:0] i_aqu_rd;
+
+    input  [IDX_LEN-1:0] i_rs1;
+    input  [IDX_LEN-1:0] i_rs2;
+    output                 o_rs1_in_use;
+    output                 o_rs2_in_use;
+    output [TAG_LEN-1:0] o_rs1_used_by;
+    output [TAG_LEN-1:0] o_rs2_used_by;
+
+    input                  i_rel;
+    input  [TAG_LEN-1:0] i_rel_by;
+    input  [IDX_LEN-1:0] i_rel_rd;
+
+    // Logic
+    wire rel_rs1 = (i_rel & i_rs1 == i_rel_rd & used_by[i_rs1] == i_rel_by);
+    wire rel_rs2 = (i_rel & i_rs2 == i_rel_rd & used_by[i_rs2] == i_rel_by);
+
+    assign o_rs1_in_use  = in_use[i_rs1] & ~rel_rs1;
+    assign o_rs2_in_use  = in_use[i_rs2] & ~rel_rs2;
+    assign o_rs1_used_by = used_by[i_rs1];
+    assign o_rs2_used_by = used_by[i_rs2];
+
+    reg in_use [REG_COUNT] on (posedge clk) = match (reset) {
+        0 => match ((i_aqu & (%0 == i_aqu_rd)) $ (i_rel & (%0 == i_rel_rd))) {
+            0'b00 => in_use[%0],
+            0'b01 => (used_by[%0] != i_rel_by),
+            0'b10 => 1,
+            0'b11 => 1,
+        } & %0 != 0,
+        1 => 0,
+    };
+
+    reg [TAG_LEN-1:0] used_by [REG_COUNT] on (posedge clk) = match (reset) {
+        0 => match (i_aqu & (%0 == i_aqu_rd)) {
+            0 => used_by[%0],
+            1 => i_aqu_by,
+        },
+        1 => 0,
+    };
+}

@@ -16,6 +16,13 @@ void Error::drop() const {
     free(m_msg);
 }
 
+ErrorCtx ErrorCtx::empty() {
+    return (ErrorCtx) {
+        .m_fatal = false,
+        .m_errors = Vec<Error>::empty(),
+    };
+}
+
 void ErrorCtx::post_info(const char* p_fmt, ...) {
     va_list args;
     va_start(args, p_fmt);
@@ -50,28 +57,17 @@ void ErrorCtx::vpost(ErrorKind p_kind, const char* p_fmt, va_list p_args) {
     }
     char* msg;
     vasprintf(&msg, p_fmt, p_args);
-    if (!msg) {
-        m_fatal = true;
-        m_oom = true;
-        return;
-    };
-    bool succ = m_errors.append((Error) {
+    assert(msg != nullptr, "Failed to allocate memory, aborting.");
+    m_errors.append((Error) {
         .m_kind = p_kind,
         .m_msg = msg,
     });
-    if (!succ) {
-        m_fatal = true;
-        m_oom = true;
-    }
 };
 
 void ErrorCtx::report(FILE* p_log, bool p_print_success) {
     if (m_errors.m_len == 0 && p_print_success) {
         fprintf(p_log, "No errors occured\n");
         return;
-    }
-    if (m_oom) {
-        fprintf(p_log, "NOTE: Error reporting may be incomplete, process ran out of memory!\n\n");
     }
     for (usize i = 0; i < m_errors.m_len; i++) {
         m_errors.at(i)->report(p_log);
